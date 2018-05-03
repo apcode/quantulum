@@ -3,6 +3,9 @@
 
 """quantulum classes."""
 
+from __future__ import unicode_literals
+
+import six
 
 ###############################################################################
 class Quantity(object):
@@ -19,9 +22,11 @@ class Quantity(object):
 
     def __repr__(self):
         """Representation method."""
-        msg = u'Quantity(%g, "%s")'
+        msg = 'Quantity(%g, "%s")'
         msg = msg % (self.value, self.unit.name)
-        return msg.encode('utf-8')
+        if isinstance(msg, six.binary_type):
+            msg = msg.encode('utf-8')
+        return msg
 
     def __eq__(self, other):
         """Equality method."""
@@ -51,9 +56,11 @@ class Unit(object):
 
     def __repr__(self):
         """Representation method."""
-        msg = u'Unit(name="%s", entity=Entity("%s"), uri=%s)'
+        msg = 'Unit(name="%s", entity=Entity("%s"), uri=%s)'
         msg = msg % (self.name, self.entity.name, self.uri)
-        return msg.encode('utf-8')
+        if isinstance(msg, six.binary_type):
+            msg = msg.encode('utf-8')
+        return msg
 
     def __eq__(self, other):
         """Equality method."""
@@ -79,9 +86,11 @@ class Entity(object):
 
     def __repr__(self):
         """Representation method."""
-        msg = u'Entity(name="%s", uri=%s)'
+        msg = 'Entity(name="%s", uri=%s)'
         msg = msg % (self.name, self.uri)
-        return msg.encode('utf-8')
+        if isinstance(msg, six.binary_type):
+            msg = msg.encode('utf-8')
+        return msg
 
     def __eq__(self, other):
         """Equality method."""

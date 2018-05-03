@@ -3,11 +3,16 @@
 
 """quantulum parser."""
 
+from __future__ import unicode_literals
+
 # Standard library
 import re
 import logging
 from fractions import Fraction
 from collections import defaultdict
+
+# Dependencies
+import six
 
 # Quantulum
 from . import load as l
@@ -92,7 +97,7 @@ def substitute_values(text, values):
         for char in range(first + 1, len(final_text)):
             shifts[char] = shift
 
-    logging.debug(u'Text after numeric conversion: "%s"', final_text)
+    logging.debug('Text after numeric conversion: "%s"', final_text)
 
     return final_text, shifts
 
@@ -109,13 +114,13 @@ def get_values(item):
     fracs = r'|'.join(r.UNI_FRAC)
 
     value = item.group(2)
-    value = re.sub(ur'(?<=\d)(%s)10' % r.MULTIPLIERS, 'e', value)
+    value = re.sub(r'(?<=\d)(%s)10' % r.MULTIPLIERS, 'e', value)
     value = re.sub(fracs, callback, value, re.IGNORECASE)
     value = re.sub(' +', ' ', value)
 
-    range_separator = re.findall(ur'\d+ ?(-|and|(?:- ?)?to) ?\d', value)
-    uncer_separator = re.findall(ur'\d+ ?(\+/-|±) ?\d', value)
-    fract_separator = re.findall(ur'\d+/\d+', value)
+    range_separator = re.findall(r'\d+ ?(-|and|(?:- ?)?to) ?\d', value)
+    uncer_separator = re.findall(r'\d+ ?(\+/-|±) ?\d', value)
+    fract_separator = re.findall(r'\d+/\d+', value)
 
     uncertainty = None
     if range_separator:
@@ -134,8 +139,8 @@ def get_values(item):
     else:
         values = [float(re.sub(r'-$', '', value))]
 
-    logging.debug(u'\tUncertainty: %s', uncertainty)
-    logging.debug(u'\tValues: %s', values)
+    logging.debug('\tUncertainty: %s', uncertainty)
+    logging.debug('\tValues: %s', values)
 
     return uncertainty, values
 
@@ -161,7 +166,7 @@ def build_unit_name(dimensions):
 
     name = name.strip()
 
-    logging.debug(u'\tUnit inferred name: %s', name)
+    logging.debug('\tUnit inferred name: %s', name)
 
     return name
 
@@ -174,7 +179,7 @@ def get_unit_from_dimensions(dimensions, text):
     try:
         unit = l.DERIVED_UNI[key]
     except KeyError:
-        logging.debug(u'\tCould not find unit for: %s', key)
+        logging.debug('\tCould not find unit for: %s', key)
         unit = c.Unit(name=build_unit_name(dimensions),
                       dimensions=dimensions,
                       entity=get_entity_from_dimensions(dimensions, text))
@@ -201,7 +206,7 @@ def get_entity_from_dimensions(dimensions, text):
         else:
             ent = l.DERIVED_ENT[key][0]
     except IndexError:
-        logging.debug(u'\tCould not find entity for: %s', key)
+        logging.debug('\tCould not find entity for: %s', key)
         ent = c.Entity(name='unknown', dimensions=new_dimensions)
 
     return ent
@@ -257,12 +262,12 @@ def get_unit(item, text):
                     base = l.UNITS[surface][0].name
                 dimensions += [{'base': base, 'power': power}]
             elif not slash:
-                slash = any(i in item.group(group) for i in [u'/', u' per '])
+                slash = any(i in item.group(group) for i in ['/', ' per '])
 
         unit = get_unit_from_dimensions(dimensions, text)
 
-    logging.debug(u'\tUnit: %s', unit)
-    logging.debug(u'\tEntity: %s', unit.entity)
+    logging.debug('\tUnit: %s', unit)
+    logging.debug('\tEntity: %s', unit.entity)
 
     return unit
 
@@ -271,11 +276,11 @@ def get_unit(item, text):
 def get_surface(shifts, orig_text, item, text):
     """Extract surface from regex hit."""
     span = item.span()
-    logging.debug(u'\tInitial span: %s ("%s")', span, text[span[0]:span[1]])
+    logging.debug('\tInitial span: %s ("%s")', span, text[span[0]:span[1]])
 
     real_span = (span[0] - shifts[span[0]], span[1] - shifts[span[1] - 1])
     surface = orig_text[real_span[0]:real_span[1]]
-    logging.debug(u'\tShifted span: %s ("%s")', real_span, surface)
+    logging.debug('\tShifted span: %s ("%s")', real_span, surface)
 
     while any(surface.endswith(i) for i in [' ', '-']):
         surface = surface[:-1]
@@ -285,7 +290,7 @@ def get_surface(shifts, orig_text, item, text):
         surface = surface[1:]
         real_span = (real_span[0] + 1, real_span[1])
 
-    logging.debug(u'\tFinal span: %s ("%s")', real_span, surface)
+    logging.debug('\tFinal span: %s ("%s")', real_span, surface)
     return surface, real_span
 
 
@@ -310,7 +315,7 @@ def build_quantity(orig_text, text, item, values, unit, surface, span, uncert):
             re.search(r'1st|2nd|3rd|[04-9]th', surface) or \
             re.search(r'\d+[A-Z]+\d+', surface) or \
             re.search(r'\ba second\b', surface, re.IGNORECASE):
-        logging.debug(u'\tMeaningless quantity ("%s"), discard', surface)
+        logging.debug('\tMeaningless quantity ("%s"), discard', surface)
         return
 
     # Usually "$3T" does not stand for "dollar tesla"
@@ -324,7 +329,7 @@ def build_quantity(orig_text, text, item, values, unit, surface, span, uncert):
                 if suffix[1]:
                     surface = surface[:surface.find(suffix[1])]
                     span = (span[0], span[1] - len(suffix[1]))
-                logging.debug(u'\tCorrect for "$3T" pattern')
+                logging.debug('\tCorrect for "$3T" pattern')
             except IndexError:
                 pass
         else:
@@ -334,7 +339,7 @@ def build_quantity(orig_text, text, item, values, unit, surface, span, uncert):
                 surface += suffix
                 span = (span[0], span[1] + 1)
                 values = [i * r.SUFFIXES[suffix] for i in values]
-                logging.debug(u'\tCorrect for "$3T" pattern')
+                logging.debug('\tCorrect for "$3T" pattern')
             except IndexError:
                 pass
 
@@ -343,7 +348,7 @@ def build_quantity(orig_text, text, item, values, unit, surface, span, uncert):
         unit = l.NAMES['dimensionless']
         surface = surface[:-1]
         span = (span[0], span[1] - 1)
-        logging.debug(u'\tCorrect for decade pattern')
+        logging.debug('\tCorrect for decade pattern')
 
     # Usually "in" stands for the preposition, not inches
     elif unit.dimensions[-1]['base'] == 'inch' and \
@@ -354,7 +359,7 @@ def build_quantity(orig_text, text, item, values, unit, surface, span, uncert):
             unit = l.NAMES['dimensionless']
         surface = surface[:-3]
         span = (span[0], span[1] - 3)
-        logging.debug(u'\tCorrect for "in" pattern')
+        logging.debug('\tCorrect for "in" pattern')
 
     elif is_quote_artifact(text, item.span()):
         if len(unit.dimensions) > 1:
@@ -363,14 +368,14 @@ def build_quantity(orig_text, text, item, values, unit, surface, span, uncert):
             unit = l.NAMES['dimensionless']
         surface = surface[:-1]
         span = (span[0], span[1] - 1)
-        logging.debug(u'\tCorrect for quotes')
+        logging.debug('\tCorrect for quotes')
 
     elif re.search(r' time$', surface) and len(unit.dimensions) > 1 and \
             unit.dimensions[-1]['base'] == 'count':
         unit = get_unit_from_dimensions(unit.dimensions[:-1], orig_text)
         surface = surface[:-5]
         span = (span[0], span[1] - 5)
-        logging.debug(u'\tCorrect for "time"')
+        logging.debug('\tCorrect for "time"')
 
     objs = []
     for value in values:
@@ -388,14 +393,14 @@ def build_quantity(orig_text, text, item, values, unit, surface, span, uncert):
 def clean_text(text):
     """Clean text before parsing."""
     # Replace a few nasty unicode characters with their ASCII equivalent
-    maps = {u'×': u'x', u'–': u'-', u'−': '-'}
+    maps = {'×': 'x', '–': '-', '−': '-'}
     for element in maps:
         text = text.replace(element, maps[element])
 
     # Replace genitives
     text = re.sub(r'(?<=\w)\'s\b|(?<=\w)s\'(?!\w)', '  ', text)
 
-    logging.debug(u'Clean text: "%s"', text)
+    logging.debug('Clean text: "%s"', text)
 
     return text
 
@@ -410,14 +415,14 @@ def parse(text, verbose=False):
     if verbose:
         level = root.level
         root.setLevel(logging.DEBUG)
-        logging.debug(u'Verbose mode')
+        logging.debug('Verbose mode')
 
-    if isinstance(text, str):
+    if isinstance(text, six.binary_type):
         text = text.decode('utf-8')
-        logging.debug(u'Converted string to unicode (assume utf-8 encoding)')
+        logging.debug('Converted string to unicode (assume utf-8 encoding)')
 
     orig_text = text
-    logging.debug(u'Original text: "%s"', orig_text)
+    logging.debug('Original text: "%s"', orig_text)
 
     text = clean_text(text)
     values = extract_spellout_values(text)
@@ -428,12 +433,12 @@ def parse(text, verbose=False):
 
         groups = dict([i for i in item.groupdict().items() if i[1] and
                        i[1].strip()])
-        logging.debug(u'Quantity found: %s', groups)
+        logging.debug('Quantity found: %s', groups)
 
         try:
             uncert, values = get_values(item)
         except ValueError as err:
-            logging.debug(u'Could not parse quantity: %s', err)
+            logging.debug('Could not parse quantity: %s', err)
 
         unit = get_unit(item, text)
         surface, span = get_surface(shifts, orig_text, item, text)
@@ -459,7 +464,7 @@ def inline_parse(text, verbose=False):
     shift = 0
     for quantity in parsed:
         index = quantity.span[1] + shift
-        to_add = u' {' + unicode(quantity) + u'}'
+        to_add = ' {' + unicode(quantity) + '}'
         text = text[0:index] + to_add + text[index:]
         shift += len(to_add)
 

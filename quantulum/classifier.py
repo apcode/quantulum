@@ -3,15 +3,19 @@
 
 """quantulum classifier functions."""
 
+from __future__ import print_function
+from __future__ import unicode_literals
+
 # Standard library
-import re
+import regex as re
+import io
 import os
 import json
-import pickle
 import logging
 
 # Dependencies
 import wikipedia
+from six.moves.cPickle import loads
 from stemming.porter2 import stem
 try:
     from sklearn.linear_model import SGDClassifier
@@ -31,7 +35,7 @@ def download_wiki():
     ambiguous += [i for i in l.DERIVED_ENT.items() if len(i[1]) > 1]
     pages = set([(j.name, j.uri) for i in ambiguous for j in i[1]])
 
-    print
+    print()
     objs = []
     for num, page in enumerate(pages):
 
@@ -39,8 +43,8 @@ def download_wiki():
         obj['_id'] = obj['url'].replace('https://en.wikipedia.org/wiki/', '')
         obj['clean'] = obj['_id'].replace('_', ' ')
 
-        print '---> Downloading %s (%d of %d)' % \
-              (obj['clean'], num + 1, len(pages))
+        print('---> Downloading %s (%d of %d)' %
+              (obj['clean'], num + 1, len(pages)))
 
         obj['text'] = wikipedia.page(obj['clean']).content
         obj['unit'] = page[0]
@@ -50,13 +54,13 @@ def download_wiki():
     os.remove(path)
     json.dump(objs, open(path, 'w'), indent=4, sort_keys=True)
 
-    print '\n---> All done.\n'
+    print('\n---> All done.\n')
 
 
 ###############################################################################
 def clean_text(text):
     """Clean text for TFIDF."""
-    new_text = re.sub(ur'\p{P}+', ' ', text)
+    new_text = re.sub(r'\p{P}+', ' ', text)
 
     new_text = [stem(i) for i in new_text.lower().split() if not
                 re.findall(r'[0-9]', i)]
@@ -105,7 +109,7 @@ def train_classifier(download=True, parameters=None, ngram_range=(1, 1)):
 def load_classifier():
     """Train the intent classifier."""
     path = os.path.join(l.TOPDIR, 'clf.pickle')
-    obj = pickle.load(open(path, 'r'))
+    obj = loads(io.open(path, 'rb').read(), encoding='latin-1')
 
     return obj['tfidf_model'], obj['clf'], obj['target_names']
 
