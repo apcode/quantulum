@@ -5,6 +5,7 @@
 
 from __future__ import unicode_literals
 
+
 # Standard library
 import re
 import logging
@@ -240,7 +241,7 @@ def parse_unit(item, group, slash):
 
 
 ###############################################################################
-def get_unit(item, text):
+def get_unit(item, text, use_classifier=True):
     """Extract unit from regex hit."""
     group_units = [1, 4, 6, 8, 10]
     group_operators = [3, 5, 7, 9]
@@ -256,7 +257,7 @@ def get_unit(item, text):
                 continue
             if group in group_units:
                 surface, power = parse_unit(item, group, slash)
-                if clf.USE_CLF:
+                if clf.USE_CLF and use_classifier:
                     base = clf.disambiguate_unit(surface, text).name
                 else:
                     base = l.UNITS[surface][0].name
@@ -406,7 +407,7 @@ def clean_text(text):
 
 
 ###############################################################################
-def parse(text, verbose=False):
+def parse(text, verbose=False, use_classifier=True):
     """Extract all quantities from unstructured text."""
     log_format = ('%(asctime)s --- %(message)s')
     logging.basicConfig(format=log_format)
@@ -440,7 +441,7 @@ def parse(text, verbose=False):
         except ValueError as err:
             logging.debug('Could not parse quantity: %s', err)
 
-        unit = get_unit(item, text)
+        unit = get_unit(item, text, use_classifier)
         surface, span = get_surface(shifts, orig_text, item, text)
         objs = build_quantity(orig_text, text, item, values, unit, surface,
                               span, uncert)
