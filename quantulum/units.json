@@ -413,7 +413,7 @@
         "entity": "mass",
         "URI": "https://en.wikipedia.org/wiki/Pound_(mass)",
         "dimensions": [],
-        "symbols": ["lb", "lbm"]
+        "symbols": ["lb", "lbm", "hundredth pounds"]
     },
     {
         "name": "ounce",
