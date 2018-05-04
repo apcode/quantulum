@@ -16,7 +16,7 @@ import re
 
 # Dependencies
 import wikipedia
-from six.moves.cPickle import loads
+import six.moves.cPickle as pickle
 from stemming.porter2 import stem
 try:
     from sklearn.linear_model import SGDClassifier
@@ -111,10 +111,10 @@ def load_classifier():
     """Train the intent classifier."""
     path = os.path.join(l.TOPDIR, 'clf.pickle')
     try:
-        obj = loads(io.open(path, 'rb').read(), encoding='latin-1')
+        obj = pickle.loads(io.open(path, 'rb').read(), encoding='latin-1')
     except TypeError:
         # Python 2 backwards compatibility.
-        obj = loads(io.open(path, 'rb').read())
+        obj = pickle.loads(io.open(path, 'rb').read())
 
     return obj['tfidf_model'], obj['clf'], obj['target_names']
 
