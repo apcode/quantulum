@@ -119,12 +119,16 @@ def get_values(item):
     value = re.sub(fracs, callback, value, re.IGNORECASE)
     value = re.sub(' +', ' ', value)
 
+    number_fract_separator = re.findall(r'([\d.]+) ?(?::|,|and|-) ?(\d+)/(\d+)', value)
     range_separator = re.findall(r'\d+ ?(-|and|(?:- ?)?to) ?\d', value)
     uncer_separator = re.findall(r'\d+ ?(\+/-|±) ?\d', value)
     fract_separator = re.findall(r'\d+/\d+', value)
 
     uncertainty = None
-    if range_separator:
+    if number_fract_separator:
+        value, nom, demon = number_fract_separator[0]
+        values = [float(value) + (float(nom) / float(demon))]
+    elif range_separator:
         values = value.split(range_separator[0])
         values = [float(re.sub(r'-$', '', i)) for i in values]
     elif uncer_separator:
