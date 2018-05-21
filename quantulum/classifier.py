@@ -95,7 +95,7 @@ def train_classifier(download=True, parameters=None, ngram_range=(1, 1)):
     matrix = tfidf_model.fit_transform(train_data)
 
     if parameters is None:
-        parameters = {'loss': 'log', 'penalty': 'l2', 'n_iter': 50,
+        parameters = {'loss': 'log', 'penalty': 'l2', 'max_iter': 50,
                       'alpha': 0.00001, 'fit_intercept': True}
 
     clf = SGDClassifier(**parameters).fit(matrix, train_target)
